@@ -7,11 +7,10 @@ const getRooms = async (name: string, capacity: number,features: string[], minPr
         console.log(name)
 
         if(name == undefined || name == ""){
-            query = `SELECT * FROM room INNER JOIN roomfeature ON room.roomid = roomfeature.roomid INNER JOIN features ON roomfeature.featureid = features.featureid WHERE room.price BETWEEN ? AND ? AND room.capacity = ?`;
+            query = `SELECT * FROM room INNER JOIN roomfeature ON room.roomid = roomfeature.roomid INNER JOIN features ON roomfeature.featureid = features.featureid WHERE room.price BETWEEN ? AND ? AND room.capacity >= 0 AND room.capacity <= ?`;
             params.push(capacity)
         }else{
-            query = `SELECT * FROM room INNER JOIN roomfeature ON room.roomid = roomfeature.roomid INNER JOIN features ON roomfeature.featureid = features.featureid WHERE room.price BETWEEN ? AND ? AND room.name = ? AND room.capacity = ? `;
-            params.push(name)
+            query = `SELECT * FROM room INNER JOIN roomfeature ON room.roomid = roomfeature.roomid INNER JOIN features ON roomfeature.featureid = features.featureid WHERE room.price BETWEEN ? AND ? AND room.name LIKE '%${name}%' AND room.capacity >= 0 AND room.capacity <= ? `;
             params.push(capacity)
         }
 

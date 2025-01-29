@@ -42,7 +42,7 @@ interface RoomStore {
   fetchRooms: () => Promise<void>
 }
 
-const useRoomStore = create<RoomStore>((set) => ({
+export const useRoomStore = create<RoomStore>((set) => ({
   rooms: [],
   loading: false,
   error: null,
@@ -52,7 +52,7 @@ const useRoomStore = create<RoomStore>((set) => ({
     name: '',
     priceMin: 0,
     priceMax: 1000,
-    capacity: 1,
+    capacity: 5,
     features: {
       wifi: false,
       airConditioner: false
@@ -63,15 +63,14 @@ const useRoomStore = create<RoomStore>((set) => ({
     set({ loading: true, error: null })
     try {
       let roomData = useRoomStore.getState().filters
-      roomData.features.airConditioner = true
-      roomData.features.wifi = true
-      roomData.capacity = 2
+      let wifi = !roomData.features.wifi
+      let airConditioning = !roomData.features.airConditioner
 
       let url = ""
       if(roomData.name){
-        url = `http://localhost:4000/rooms?name=${roomData.name}&capacity=${roomData.capacity}&minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=${roomData.features.airConditioner}`
+        url = `http://localhost:4000/rooms?name=${roomData.name}&capacity=${roomData.capacity}&minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${wifi}&arcondicionado=${airConditioning}`
       }else{
-        url = `http://localhost:4000/rooms?capacity=${roomData.capacity}&minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=${roomData.features.airConditioner}`
+        url = `http://localhost:4000/rooms?capacity=${roomData.capacity}&minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${wifi}&arcondicionado=${airConditioning}`
       }
       
       console.log(url)
@@ -96,8 +95,6 @@ const useRoomStore = create<RoomStore>((set) => ({
 }))
 
 export default function Home() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
   const ITEMS_PER_PAGE = 4;
   
   const { 
@@ -112,26 +109,6 @@ export default function Home() {
   } = useRoomStore()
 
   const totalPages = Math.ceil(rooms.length / ITEMS_PER_PAGE);
-
-  useEffect(() => {
-    const name = searchParams.get('name') || ''
-    const priceMin = Number(searchParams.get('priceMin')) || 0
-    const priceMax = Number(searchParams.get('priceMax')) || 1000
-    const capacity = Number(searchParams.get('capacity')) || 1
-    const wifi = searchParams.get('wifi') === 'true'
-    const airConditioner = searchParams.get('airConditioner') === 'true'
-
-    setFilters({
-      name,
-      priceMin,
-      priceMax, 
-      capacity,
-      features: {
-        wifi,
-        airConditioner
-      }
-    })
-  }, [searchParams, setFilters])
 
   useEffect(() => {
     fetchRooms()
