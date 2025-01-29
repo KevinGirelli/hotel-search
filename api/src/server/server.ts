@@ -2,7 +2,7 @@ import express from "express"
 import { get } from "http"
 const database = require("../database/sqlite")
 const {getRooms} = require("../models/room")
-const bodyParser = require('body-parser');
+import cors from "cors";
 
 const server = express()
 
@@ -22,10 +22,27 @@ server.get("/", (req,res) =>{
 server.use(express.urlencoded({ extended: true }));
 server.use(express.json());
 
+server.use(cors({
+    origin: ["http://localhost:3000"], 
+    methods: ["GET", "POST", "PUT", "DELETE"], 
+    allowedHeaders: ["Content-Type", "Authorization"], 
+    credentials: true, 
+}));
+
 server.get("/rooms", async (req,res) =>{
-    const data = req.body
-    console.log(data)
-    const rows = await getRooms(data.name,data.capacity, data.features ,data.minPrice,data.maxPrice)
+    const data = req.query
+    const features:string[] = [] 
+
+    if(data.arcondicionado == "true"){
+        features.push("Ar-condicionado")
+    }
+
+    if(data.wifi == "true"){
+        features.push("WiFi")
+    }
+
+    console.log(features)
+    const rows = await getRooms(features ,data.minPrice,data.maxPrice)
 
     let roomMap: { [key: number]: Room } = {};
 

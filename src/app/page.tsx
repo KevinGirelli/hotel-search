@@ -57,19 +57,24 @@ const useRoomStore = create<RoomStore>((set) => ({
   fetchRooms: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch('http://localhost:4000/api/rooms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(useRoomStore.getState().filters)
+      let roomData = useRoomStore.getState().filters
+      roomData.features.airConditioner = false
+      roomData.features.wifi = true 
+      const url = `http://localhost:4000/rooms?minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=${roomData.features.airConditioner}`
+      console.log(url)
+
+      const response = await fetch(url, {
+        method: 'GET'
       })
+
+    
       
       if (!response.ok) {
         throw new Error('Erro na requisição')
       }
       
       const data = await response.json()
+      console.log(data)
       set({ rooms: data, loading: false })
     } catch (error) {
       set({ error: 'Falha ao buscar quartos', loading: false })
