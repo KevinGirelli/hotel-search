@@ -16,9 +16,11 @@ interface Room {
 interface RoomListProps {
   rooms: Room[]
   loading: boolean
+  currentPage: number
+  itemsPerPage: number
 }
 
-export default function RoomList({ rooms, loading }: RoomListProps) {
+export default function RoomList({ rooms = [], loading, currentPage, itemsPerPage }: RoomListProps) {
   if (loading) {
     return (
       <Grid container spacing={2}>
@@ -35,7 +37,10 @@ export default function RoomList({ rooms, loading }: RoomListProps) {
     )
   }
 
-  if (rooms.length === 0) {
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const selectedRooms = rooms.slice(startIndex, startIndex + itemsPerPage);
+
+  if (selectedRooms.length === 0) {
     return (
       <Typography variant="h6" align="center" color="textSecondary" gutterBottom>
         Nenhum quarto encontrado
@@ -45,7 +50,7 @@ export default function RoomList({ rooms, loading }: RoomListProps) {
 
   return (
     <Grid container spacing={2}>
-      {rooms.map((room) => (
+      {selectedRooms.map((room) => (
         <Grid item xs={12} md={6} key={room.id}>
           <Card variant="outlined">
             <CardContent>

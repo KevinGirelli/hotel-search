@@ -7,6 +7,7 @@ import SearchFilters from '@/components/SearchFilters'
 import RoomList from '@/components/RoomList'
 import Header from '@/components/Header'
 import { Container, Box, Typography } from '@mui/material';
+import Pagination from '@/components/Pagination';
 
 interface Room {
   id: string
@@ -35,6 +36,8 @@ interface RoomStore {
   loading: boolean
   error: string | null
   filters: RoomFilters
+  currentPage: number
+  setCurrentPage: (page: number) => void
   setFilters: (filters: RoomFilters) => void
   fetchRooms: () => Promise<void>
 }
@@ -43,6 +46,8 @@ const useRoomStore = create<RoomStore>((set) => ({
   rooms: [],
   loading: false,
   error: null,
+  currentPage: 1,
+  setCurrentPage: (page: number) => set({ currentPage: page }),
   filters: {
     name: '',
     priceMin: 0,
@@ -93,6 +98,7 @@ const useRoomStore = create<RoomStore>((set) => ({
 export default function Home() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const ITEMS_PER_PAGE = 4;
   
   const { 
     rooms,
@@ -100,8 +106,12 @@ export default function Home() {
     error,
     filters,
     setFilters,
-    fetchRooms
+    fetchRooms,
+    currentPage,
+    setCurrentPage
   } = useRoomStore()
+
+  const totalPages = Math.ceil(rooms.length / ITEMS_PER_PAGE);
 
   useEffect(() => {
     const name = searchParams.get('name') || ''
@@ -156,7 +166,17 @@ export default function Home() {
             <RoomList 
               rooms={rooms}
               loading={loading}
+              currentPage={currentPage}
+              itemsPerPage={ITEMS_PER_PAGE}
             />
+            
+            {!loading && rooms.length > 0 && (
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </Box>
         </Box>
       </Container>
