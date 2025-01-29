@@ -1,21 +1,99 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { create } from 'zustand'
 import SearchFilters from '@/components/SearchFilters'
 import RoomList from '@/components/RoomList'
 import Header from '@/components/Header'
-import { Container, Box, Typography } from '@mui/material'
-import { useRoomStore } from '@/store/store'
-import Pagination from '@/components/Pagination'
+import { Container, Box, Typography } from '@mui/material';
+
+interface Room {
+  id: string
+  name: string
+  price: number
+  capacity: number
+  features: {
+    wifi: boolean
+    airConditioner: boolean
+  }
+}
+
+interface RoomFilters {
+  name: string
+  priceMin: number
+  priceMax: number
+  capacity: number
+  features: {
+    wifi: boolean
+    airConditioner: boolean
+  }
+}
+
+interface RoomStore {
+  rooms: Room[]
+  loading: boolean
+  error: string | null
+  filters: RoomFilters
+  setFilters: (filters: RoomFilters) => void
+  fetchRooms: () => Promise<void>
+}
+
+const useRoomStore = create<RoomStore>((set) => ({
+  rooms: [],
+  loading: false,
+  error: null,
+  filters: {
+    name: '',
+    priceMin: 0,
+    priceMax: 1000,
+    capacity: 1,
+    features: {
+      wifi: false,
+      airConditioner: false
+    }
+  },
+  setFilters: (filters) => set({ filters }),
+  fetchRooms: async () => {
+    set({ loading: true, error: null })
+    try {
+      let roomData = useRoomStore.getState().filters
+      roomData.features.airConditioner = false
+      roomData.features.wifi = true 
+      const url = `http://localhost:4000/rooms?minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=${roomData.features.airConditioner}`
+      console.log(url)
+
+      const response = await fetch(url, {
+        method: 'GET'
+      })
+
+    
+      
+      if (!response.ok) {
+        throw new Error('Erro na requisição')
+      }
+      
+      const data = await response.json()
+      console.log(data)
+      set({ rooms: data, loading: false })
+    } catch (error) {
+      set({ error: 'Falha ao buscar quartos', loading: false })
+    }
+  }
+}))
 
 export default function Home() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const { rooms, loading, error, setFilters, fetchRooms } = useRoomStore()
-
-  useEffect(() => {
-    fetchRooms()
-  }, [])
+  
+  const { 
+    rooms,
+    loading,
+    error,
+    filters,
+    setFilters,
+    fetchRooms
+  } = useRoomStore()
 
   useEffect(() => {
     const name = searchParams.get('name') || ''
@@ -33,11 +111,13 @@ export default function Home() {
       features: {
         wifi,
         airConditioner
-      },
-      page: 1,
-      limit: 6
+      }
     })
   }, [searchParams, setFilters])
+
+  useEffect(() => {
+    fetchRooms()
+  }, [filters, fetchRooms])
 
   useEffect(() => {
     if (error) {
@@ -69,7 +149,6 @@ export default function Home() {
               rooms={rooms}
               loading={loading}
             />
-            <Pagination />
           </Box>
         </Box>
       </Container>
