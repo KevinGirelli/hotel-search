@@ -42,7 +42,7 @@ server.get("/rooms", async (req,res) =>{
     }
 
     console.log(features)
-    const rows = await getRooms(features ,data.minPrice,data.maxPrice)
+    const rows = await getRooms(data.name,data.capacity,features, data.minPrice,data.maxPrice)
 
     let roomMap: { [key: number]: Room } = {};
 

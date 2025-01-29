@@ -58,9 +58,17 @@ const useRoomStore = create<RoomStore>((set) => ({
     set({ loading: true, error: null })
     try {
       let roomData = useRoomStore.getState().filters
-      roomData.features.airConditioner = false
-      roomData.features.wifi = true 
-      const url = `http://localhost:4000/rooms?minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=true`
+      roomData.features.airConditioner = true
+      roomData.features.wifi = true
+      roomData.capacity = 2
+
+      let url = ""
+      if(roomData.name){
+        url = `http://localhost:4000/rooms?name=${roomData.name}&capacity=${roomData.capacity}&minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=${roomData.features.airConditioner}`
+      }else{
+        url = `http://localhost:4000/rooms?capacity=${roomData.capacity}&minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=${roomData.features.airConditioner}`
+      }
+      
       console.log(url)
 
       const response = await fetch(url, {
@@ -117,7 +125,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchRooms()
-  }, [filters, fetchRooms])
+  }, [filters])
 
   useEffect(() => {
     if (error) {
