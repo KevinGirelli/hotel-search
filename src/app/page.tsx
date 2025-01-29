@@ -60,7 +60,7 @@ const useRoomStore = create<RoomStore>((set) => ({
       let roomData = useRoomStore.getState().filters
       roomData.features.airConditioner = false
       roomData.features.wifi = true 
-      const url = `http://localhost:4000/rooms?minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=${roomData.features.airConditioner}`
+      const url = `http://localhost:4000/rooms?minPrice=${roomData.priceMin}&maxPrice=${roomData.priceMax}&wifi=${roomData.features.wifi}&arcondicionado=true`
       console.log(url)
 
       const response = await fetch(url, {
