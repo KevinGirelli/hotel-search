@@ -57,7 +57,7 @@ const useRoomStore = create<RoomStore>((set) => ({
   fetchRooms: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch('/api/rooms', {
+      const response = await fetch('http://localhost:4000/api/rooms', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
