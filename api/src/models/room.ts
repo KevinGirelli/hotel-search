@@ -1,32 +1,64 @@
 import database from "../database/sqlite";
 
-const getRooms = async (features: string[], minPrice: number, maxPrice: number) => {
-    return new Promise<any[]>((resolve, reject) => {
-        let query = `SELECT * FROM room INNER JOIN roomfeature ON room.roomid = roomfeature.roomid INNER JOIN features ON roomfeature.featureid = features.featureid WHERE room.price BETWEEN ? AND ?`;
-        const params:any = [minPrice,maxPrice]
-        if (features.length == 1) {
-    
-            query += ` AND features.featureid IN (SELECT featureid FROM features WHERE featurename = ?)`;
-            params.push(features[0])
-           
+const getRooms = async (
+    name: string,
+    capacity: number,
+    features: string[],
+    minPrice: number,
+    maxPrice: number,
+    offset: number,
+    limit: number
+) => {
+    return new Promise<{ rows: any[], total: number }>((resolve, reject) => {
+        let roomsQuery = `
+            SELECT DISTINCT r.roomid, r.name, r.price, r.capacity,
+            GROUP_CONCAT(f.featurename) as features
+            FROM room r
+            LEFT JOIN roomfeature rf ON r.roomid = rf.roomid
+            LEFT JOIN features f ON rf.featureid = f.featureid
+            WHERE r.price BETWEEN ? AND ?
+            AND r.capacity >= ?
+            AND r.name LIKE ?
+        `;
+        
+        let countQuery = `
+            SELECT COUNT(DISTINCT r.roomid) as total
+            FROM room r
+            LEFT JOIN roomfeature rf ON r.roomid = rf.roomid
+            LEFT JOIN features f ON rf.featureid = f.featureid
+            WHERE r.price BETWEEN ? AND ?
+            AND r.capacity >= ?
+            AND r.name LIKE ?
+        `;
+
+        const params = [minPrice, maxPrice, capacity, `%${name}%`];
+        
+        if (features.length > 0) {
+            const featureCondition = ` AND f.featurename IN (${features.map(() => '?').join(',')})`;
+            roomsQuery += featureCondition;
+            countQuery += featureCondition;
+            params.push(...features);
         }
 
-        if (features.length > 1) {
-            query += ` AND features.featureid IN (SELECT featureid FROM features WHERE featurename IN (${features.map(() => '?').join(', ')}))`;
-            
-            features.forEach(text =>{
-                params.push(text)
-            })
-        }
+        roomsQuery += ` GROUP BY r.roomid, r.name, r.price, r.capacity`;
+        roomsQuery += ` LIMIT ? OFFSET ?`;
 
-        database.all(query, params, (err: Error, rows: any[]) => {
+        database.get(countQuery, params, (err: Error, totalRow: any) => {
             if (err) {
-                reject(err); 
-                console.log(query)
-            } else {
-                resolve(rows);
-                console.log(query)
+                reject(err);
+                return;
             }
+
+            database.all(roomsQuery, [...params, limit, offset], (err: Error, rows: any[]) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ 
+                        rows, 
+                        total: totalRow.total
+                    });
+                }
+            });
         });
     });
 };
